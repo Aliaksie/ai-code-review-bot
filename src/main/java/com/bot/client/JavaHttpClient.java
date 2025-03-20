@@ -5,13 +5,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
-import com.bot.models.AIClientException;
+import com.bot.models.AIException;
 
 @Component
 public class JavaHttpClient implements APIClient {
@@ -40,14 +39,14 @@ public class JavaHttpClient implements APIClient {
 
          // todo: error handler
          if ( response.statusCode() != 200 ) {
-            throw new AIClientException( "API Error: " + response.statusCode() + " - " + response.body() );
+            throw new AIException( "API Error: " + response.statusCode() + " - " + response.body() );
          }
          return response.body();
       } catch ( IOException e ) {
-         throw new AIClientException( "API Error: " + e.getMessage() );
+         throw new AIException( "API Error: " + e.getMessage() );
       } catch ( InterruptedException e ) {
          Thread.currentThread().interrupt();
-         throw new AIClientException( "API Error: " + e.getMessage() );
+         throw new AIException( "API Error: " + e.getMessage() );
       }
    }
 }

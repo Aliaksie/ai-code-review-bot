@@ -1,10 +1,7 @@
 package com.bot.analyzers;
 
-import static com.fasterxml.jackson.databind.type.LogicalType.Map;
-
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.PmdAnalysis;
-import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.java.JavaLanguageModule;
 import net.sourceforge.pmd.lang.rule.RuleSet;
 import net.sourceforge.pmd.lang.rule.RuleSetLoader;
@@ -20,8 +17,9 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.bot.models.AIClientException;
+import com.bot.models.AIException;
 import com.bot.models.CodeRecommendation;
+import com.bot.models.GitFile;
 
 @Component
 public class PMDAnalyzer implements StaticAnalyzer {
@@ -32,14 +30,14 @@ public class PMDAnalyzer implements StaticAnalyzer {
    }
 
    @Override
-   public List<CodeRecommendation> analyze( final String filePath, String fileContent ) {
+   public List<CodeRecommendation> analyze( final GitFile file ) {
       File tempFile = null;
       try {
          List<CodeRecommendation> recommendations = new ArrayList<>();
-         tempFile = File.createTempFile( "pmd_analysis_", ".java" );
+         tempFile = File.createTempFile( file.filename(), ".java" );
          tempFile.deleteOnExit();  // Ensure the temp file is deleted when the program ends
          try ( FileWriter writer = new FileWriter( tempFile ) ) {
-            writer.write( fileContent );
+            writer.write( file.content() );
          }
 
          PMDConfiguration config = new PMDConfiguration();
@@ -58,22 +56,19 @@ public class PMDAnalyzer implements StaticAnalyzer {
 
             // ✅ Collect rule violations
             for ( RuleViolation violation : report.getViolations() ) {
-               recommendations.add( new CodeRecommendation( filePath, violation.getBeginLine(), "[PMD] " + violation.getDescription() ) );
+               recommendations.add(
+                     new CodeRecommendation( file.filename(), violation.getBeginLine(), violation.getDescription(), file.content(),
+                           CodeRecommendation.Type.PMD ) );
             }
          }
          return recommendations;
       } catch ( Exception e ) {
-         throw new AIClientException( "PMD analysis failed: " + e.getMessage() );
+         throw new AIException( "PMD analysis failed: " + e.getMessage() );
       } finally {
          if ( tempFile != null && tempFile.exists() ) {
             tempFile.delete();
          }
       }
-   }
-
-   @Override
-   public String type() {
-      return "PMD";
    }
 
    private String getDefaultRules() {

@@ -27,8 +27,9 @@ git:
 
 # todo ?all analyzer ...
 sonar:
+  fetch: true # fetch result from sonar or scan files
   host: http://localhost:9000
-  login: YOUR_SONARQUBE_TOKEN
+  token: YOUR_SONARQUBE_TOKEN
 
 checkstyle:
   config: |

@@ -1,24 +1,24 @@
 package com.bot.analyzers;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.xml.sax.InputSource;
 
-import com.bot.models.AIClientException;
+import com.bot.models.AIException;
 import com.bot.models.CodeRecommendation;
+import com.bot.models.GitFile;
 import com.puppycrawl.tools.checkstyle.Checker;
-import com.puppycrawl.tools.checkstyle.api.*;
 import com.puppycrawl.tools.checkstyle.ConfigurationLoader;
 import com.puppycrawl.tools.checkstyle.PropertiesExpander;
+import com.puppycrawl.tools.checkstyle.api.AuditEvent;
+import com.puppycrawl.tools.checkstyle.api.AuditListener;
+import com.puppycrawl.tools.checkstyle.api.Configuration;
 
 @Component
 public class CheckstyleAnalyzer implements StaticAnalyzer {
@@ -30,43 +30,36 @@ public class CheckstyleAnalyzer implements StaticAnalyzer {
    }
 
    @Override
-   public List<CodeRecommendation> analyze( final String filePath, String fileContent ) {
+   public List<CodeRecommendation> analyze( final GitFile file ) {
       List<CodeRecommendation> recommendations = new ArrayList<>();
       File tempFile = null;
       try {
-         tempFile = File.createTempFile( "checkstyle_", ".java" );
-         Files.writeString( tempFile.toPath(), fileContent );
+         tempFile = File.createTempFile( file.filename(), ".java" );
+         Files.writeString( tempFile.toPath(), file.content() );
 
          // Load Checkstyle configuration
-         InputSource inputSource = new InputSource( new StringReader( checkstyleConfig ) );
-         Configuration config = ConfigurationLoader.loadConfiguration( inputSource, new PropertiesExpander( System.getProperties() ),
-               ConfigurationLoader.IgnoredModulesOptions.OMIT );
+         Configuration config = ConfigurationLoader.loadConfiguration( new InputSource( new StringReader( checkstyleConfig ) ),
+               new PropertiesExpander( System.getProperties() ), ConfigurationLoader.IgnoredModulesOptions.OMIT );
 
          Checker checker = new Checker();
          checker.setModuleClassLoader( Thread.currentThread().getContextClassLoader() );
 
-         AuditEventListener listener = new AuditEventListener( recommendations, filePath );
+         AuditEventListener listener = new AuditEventListener( recommendations, file );
          checker.addListener( listener );
          checker.configure( config );
 
-         // ✅ Run Checkstyle on the temp file
-         checker.process( Collections.singletonList( tempFile ) );
+         checker.process( List.of( tempFile ) );
 
          return recommendations;
 
       } catch ( Exception e ) {
-         throw new AIClientException( "Checkstyle error: " + e.getMessage() ); // todo!
+         throw new AIException( "Checkstyle error: " + e.getMessage() ); // todo!
       } finally {
          //  Delete the temporary file
          if ( tempFile != null && tempFile.exists() ) {
             tempFile.delete();
          }
       }
-   }
-
-   @Override
-   public String type() {
-      return "Checkstyle";
    }
 
    private String getDefaultConfig() {
@@ -91,11 +84,11 @@ public class CheckstyleAnalyzer implements StaticAnalyzer {
 
    static class AuditEventListener implements AuditListener {
       private final List<CodeRecommendation> recommendations;
-      private final String filePath;
+      private final GitFile gitFile;
 
-      public AuditEventListener( List<CodeRecommendation> recommendations, String filePath ) {
+      public AuditEventListener( List<CodeRecommendation> recommendations, GitFile gitFile ) {
          this.recommendations = recommendations;
-         this.filePath = filePath;
+         this.gitFile = gitFile;
       }
 
       @Override
@@ -103,7 +96,8 @@ public class CheckstyleAnalyzer implements StaticAnalyzer {
          int line = event.getLine();
          String message = event.getMessage();
 
-         recommendations.add( new CodeRecommendation( filePath, line > 0 ? line : -1, message ) );
+         recommendations.add(
+               new CodeRecommendation( gitFile.filename(), line > 0 ? line : -1, message, gitFile.content(), CodeRecommendation.Type.CHECKSTYLE ) );
       }
 
       @Override

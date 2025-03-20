@@ -1,14 +1,14 @@
 package com.bot.controllers;
 
-import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bot.models.AIClientException;
 import com.bot.services.PRReviewService;
 
 @RestController
@@ -22,13 +22,8 @@ public class GitWebhookController {
    }
 
    @PostMapping( "/ai-webhook" )
-   public ResponseEntity<String> handleGitHubWebhook( @RequestBody String payload ) {
-      try {
-         // todo: get from payload(GitHub, AzureRepos, GitLab) prId, repoId, prStatus...
-         prReviewService.reviewPR( "", "" );
-         return ResponseEntity.ok( "Webhook received" );
-      } catch ( IOException e ) {
-         throw new AIClientException( "Errot: " + e.getMessage() ); // todo: error handler
-      }
+   public ResponseEntity<String> handleGitHubWebhook( @RequestHeader Map<String, String> headers, @RequestBody String payload ) {
+      prReviewService.reviewPR( headers, payload );
+      return ResponseEntity.ok( "Webhook received" );
    }
 }

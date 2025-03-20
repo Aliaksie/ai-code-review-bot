@@ -1,6 +1,5 @@
 package com.bot.integrations;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,20 +7,26 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.bot.client.APIClient;
+import com.bot.models.AIException;
 import com.bot.models.GitFile;
+import com.bot.models.WebhookEvent;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AzureReposIntegration implements GitIntegration {
 
    private final GitProperties props;
    private final APIClient apiClient;
+   private final ObjectMapper objectMapper;
 
    public AzureReposIntegration( GitProperties props, APIClient apiClient ) {
       this.props = props;
       this.apiClient = apiClient;
+      this.objectMapper = new ObjectMapper();
    }
 
    @Override
-   public List<GitFile> getChangedFiles( String repoId, String prId ) throws IOException {
+   public List<GitFile> getChangedFiles( String repoId, int prId ) {
       List<GitFile> gitFiles = new ArrayList<>();
 
       String prCommits = "%s/%s/%s/_apis/git/repositories/%s/pullRequests/%s/commits?api-version=%s".formatted( props.url(), props.organization(),
@@ -55,7 +60,7 @@ public class AzureReposIntegration implements GitIntegration {
 
             // todo: Avoid duplicates
             if ( gitFiles.stream().noneMatch( f -> f.filename().equals( filePath ) ) ) {
-               gitFiles.add( new GitFile( filePath, fileContent ) );
+               gitFiles.add( new GitFile( repoId, filePath, fileContent ) );
             }
          }
       }
@@ -63,12 +68,12 @@ public class AzureReposIntegration implements GitIntegration {
       return List.of();
    }
 
-   public String getFileContent( String repoId, String filePath, String commitId ) throws IOException {
-      return "";
+   public String getFileContent( String repoId, String filePath, String commitId ) {
+      return ""; // todo!!!
    }
 
    @Override
-   public void addPrComment( final String repoId, final String prId, final String comment ) throws IOException {
+   public void addPrComment( final String repoId, final int prId, final String comment ) {
       //      POST https://dev.azure.com/{organization}/{project}/_apis/git/repositories/{repositoryId}/pullRequests/{pullRequestId}/threads?api-version=7.1
       String url = String.format( "%s/%s/%s/_apis/git/repositories/%s/pullRequests/%d/threads?api-version=%s", props.url(), props.organization(),
             props.project(), repoId, prId, props.version() );
@@ -85,9 +90,8 @@ public class AzureReposIntegration implements GitIntegration {
    }
 
    @Override
-   public void addInlineComment( String repoId, String prId, String filePath, int line, String comment ) throws IOException {
+   public void addInlineComment( String repoId, int prId, String filePath, int line, String comment ) {
       // todo
-      //      POST https://dev.azure.com/{organization}/{project}/_apis/git/repositories/{repositoryId}/pullRequests/{pullRequestId}/threads?api-version=7.1
       String url = String.format( "%s/%s/%s/_apis/git/repositories/%s/pullRequests/%d/threads?api-version=%s", props.url(), props.organization(),
             props.project(), repoId, prId, props.version() );
 
@@ -109,5 +113,22 @@ public class AzureReposIntegration implements GitIntegration {
                         .put( "secondComparingIteration", 2 ) ) );
 
       apiClient.sendRequest( url, "POST", props.token(), body );
+   }
+
+   @Override
+   public WebhookEvent handleEvent( String payload ) {
+      try {
+         JsonNode jsonNode = objectMapper.readTree( payload );
+         String eventType = jsonNode.path( "eventType" ).asText();
+         String repoId = jsonNode.path( "resource" ).path( "repository" ).path( "name" ).asText();
+         String repoUrl = jsonNode.path( "resource" ).path( "repository" ).path( "url" ).asText();
+         int prId = jsonNode.path( "resource" ).path( "pullRequestId" ).asInt();
+         String sourceBranch = jsonNode.path( "resource" ).path( "sourceRefName" ).asText().replace( "refs/heads/", "" );
+         String targetBranch = jsonNode.path( "resource" ).path( "targetRefName" ).asText().replace( "refs/heads/", "" );
+
+         return new WebhookEvent( repoId, repoUrl, prId, eventType, sourceBranch, targetBranch );
+      } catch ( Exception e ) {
+         throw new AIException( "Error processing Azure webhook" );
+      }
    }
 }

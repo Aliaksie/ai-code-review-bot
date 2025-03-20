@@ -1,8 +1,9 @@
 package com.bot.analyzers;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -18,33 +19,18 @@ public class StaticAnalysisManager {
       this.analyzers = analyzers;
    }
 
-   // todo! line / file level suggestion ?
-   public Map<String, List<CodeRecommendation>> analyzeCode( final String filePath, final String codeContent ) {
-      final Map<String, List<CodeRecommendation>> result = new HashMap<>();
-
+   public Map<String, List<CodeRecommendation>> analyzeCode( final List<GitFile> changedFiles ) {
+      final List<CodeRecommendation> results = new ArrayList<>();
       for ( final StaticAnalyzer analyzer : analyzers ) {
-         List<CodeRecommendation> analysisResult = analyzer.analyze( filePath, codeContent );
+         List<CodeRecommendation> analysisResult = analyzer.analyzeMultipleFiles( changedFiles );
 
          if ( !analysisResult.isEmpty() ) {
-            result.put( analyzer.type(), analysisResult );
+            results.addAll( analysisResult );
          }
       }
 
-      return result;
+      return results.stream().collect( Collectors.groupingBy( CodeRecommendation::filePath ) );
    }
 
-   public Map<String, String> analyzeFiles( final List<GitFile> files ) {
-      Map<String, String> result = new HashMap<>();
-
-      for ( StaticAnalyzer analyzer : analyzers ) {
-         String analysisResult = analyzer.analyzeMultipleFiles( files );
-
-         if ( !analysisResult.isBlank() ) {
-            result.put( analyzer.type(), analysisResult.trim() );
-         }
-      }
-
-      return result;
-   }
 }
 

@@ -1,6 +1,5 @@
 package com.bot.services;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -12,6 +11,7 @@ import com.bot.analyzers.StaticAnalysisManager;
 import com.bot.integrations.GitIntegration;
 import com.bot.models.CodeRecommendation;
 import com.bot.models.GitFile;
+import com.bot.models.WebhookEvent;
 
 @Service
 public class PRReviewService {
@@ -25,59 +25,46 @@ public class PRReviewService {
       this.aiService = aiService;
    }
 
-   public void reviewPR( String repoId, String prId ) throws IOException {
-      final List<GitFile> changedFiles = gitIntegration.getChangedFiles( repoId, prId );
+   // todo: use header to dynamecly choose integration !??!
+   public void reviewPR( Map<String, String> headers, String payload ) {
+      // todo: check even_type!!!
+      final WebhookEvent event = gitIntegration.handleEvent( payload );
+      final List<GitFile> changedFiles = gitIntegration.getChangedFiles( event.repositoryId(), event.pullRequestId() );
 
-      for ( GitFile(String filename, String content) : changedFiles ) {
-         Map<String, List<CodeRecommendation>> fileResults = analysisManager.analyzeCode( filename, content );
-         if ( fileResults.isEmpty() )
-            continue;
-
-         String[] lines = content.split( "\n" );
-         for ( int lineNum = 0; lineNum < lines.length; lineNum++ ) {
-            String lineContent = lines[lineNum];
-            // Run analysis for this line
-            Map<String, List<CodeRecommendation>> results = analysisManager.analyzeCode( filename, lineContent );
-            for ( var result : results.entrySet() ) {
-               if ( !result.getValue().isEmpty() ) {
-                  String suggestion = result.getValue().stream()
-                        .filter( it -> it.line() == -1 )
-                        .map( it -> {
-                           String aiSuggestion = aiService.generateCodeSuggestion( content, content, result.getKey(), it.msg() );
-                           return StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), it.msg() );
-                        } ).collect( Collectors.joining( "\n" ) );
-
-                  gitIntegration.addInlineComment( repoId, prId, filename, lineNum + 1, suggestion );
-               }
-            }
-         }
-
-         // todo: ?  make sure no line suggestion
-         for ( var result : fileResults.entrySet() ) {
-            if ( !result.getValue().isEmpty() ) {
-               String suggestion = result.getValue().stream()
-                     .filter( it -> it.line() != -1 )
-                     .map( it -> {
-                        String aiSuggestion = aiService.generateCodeSuggestion( content, content, result.getKey(), it.msg() );
-                        return StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), it.msg() );
-                     } ).collect( Collectors.joining( "\n" ) );
-
-               gitIntegration.addInlineComment( repoId, prId, filename, 0, "### File Issues Detected: \n" + suggestion );
-            }
-         }
+      Map<String, List<CodeRecommendation>> fileResults = analysisManager.analyzeCode( changedFiles );
+      if ( fileResults.isEmpty() ) {
+         return;
       }
 
-      // If any general issues exist, add a single PR-wide comment
-      // Multi-file analysis (optional)
-      final Map<String, String> results = analysisManager.analyzeFiles( changedFiles );
-      final String content = changedFiles.stream().map( GitFile::content ).collect( Collectors.joining( "\n" ) );
-      for ( var result : results.entrySet() ) {
-         if ( !result.getValue().isBlank() ) {
-            String aiSuggestion = aiService.generateCodeSuggestion( content, content, result.getKey(), result.getValue() );
-            String suggestion = StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), result.getValue() );
-
-            gitIntegration.addPrComment( repoId, prId, "### Multi-file Issues Detected: \n" + suggestion );
+      for ( var result : fileResults.entrySet() ) {
+         if ( result.getValue().isEmpty() ) {
+            continue;
          }
+         String fileName = result.getKey();
+         String fileContent = result.getValue().stream()
+               .filter( it -> it.type() != CodeRecommendation.Type.SONAR_QUBE )
+               .findAny()
+               .map( CodeRecommendation::content ).orElse( "" );
+
+         result.getValue().stream()
+               .filter( it -> it.line() != -1 )
+               .forEach( it -> {
+                  // todo extract line!
+                  // todo: optimize for same recomendation and prior by analyze type
+                  String aiSuggestion = aiService.generateCodeSuggestion( fileContent, fileContent, result.getKey(), it.msg() );
+                  String suggestion = StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), it.msg() );
+
+                  gitIntegration.addInlineComment( event.repositoryId(), event.pullRequestId(), fileName, it.line(), suggestion );
+               } );
+
+         String suggestion = result.getValue().stream()
+               .filter( it -> it.line() == -1 )
+               .map( it -> {
+                  String aiSuggestion = aiService.generateCodeSuggestion( fileContent, fileContent, result.getKey(), it.msg() );
+                  return StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), it.msg() );
+               } ).collect( Collectors.joining( "\n" ) );
+
+         gitIntegration.addInlineComment( event.repositoryId(), event.pullRequestId(), fileName, 0, "### File Issues Detected: \n" + suggestion );
       }
 
    }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import com.bot.models.AIClientException;
+import com.bot.models.AIException;
 
 @RestControllerAdvice
 public class AiCodeReviewGlobalExceptionHandler {
@@ -28,8 +28,8 @@ public class AiCodeReviewGlobalExceptionHandler {
       return ResponseEntity.status( HttpStatus.BAD_REQUEST ).body( errorResponse );
    }
 
-   @ExceptionHandler( AIClientException.class )
-   public ResponseEntity<JSONObject> handleAIClientError( AIClientException ex, WebRequest request ) {
+   @ExceptionHandler( AIException.class )
+   public ResponseEntity<JSONObject> handleAIClientError( AIException ex, WebRequest request ) {
       JSONObject errorResponse = getErrorResponse( "AI service error: " + ex.getMessage(), request, HttpStatus.SERVICE_UNAVAILABLE );
 
       return ResponseEntity.status( HttpStatus.SERVICE_UNAVAILABLE ).body( errorResponse );

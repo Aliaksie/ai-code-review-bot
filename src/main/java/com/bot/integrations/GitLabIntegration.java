@@ -1,9 +1,9 @@
 package com.bot.integrations;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.bot.models.GitFile;
+import com.bot.models.WebhookEvent;
 
 public class GitLabIntegration implements GitIntegration {
 
@@ -14,22 +14,27 @@ public class GitLabIntegration implements GitIntegration {
    }
 
    @Override
-   public List<GitFile> getChangedFiles( String repoId, String prId ) throws IOException {
+   public List<GitFile> getChangedFiles( String repoId, int prId ) {
       return List.of();
    }
 
-   public String getFileContent( String repoId, String filePath ) throws IOException {
+   public String getFileContent( String repoId, String filePath ) {
       return "";
    }
 
    @Override
-   public void addPrComment( String repoId, String prId, String comment ) throws IOException {
+   public void addPrComment( String repoId, int prId, String comment ) {
 
    }
 
    @Override
-   public void addInlineComment( String repoId, String prId, String filePath, int line, String comment ) throws IOException {
+   public void addInlineComment( String repoId, int prId, String filePath, int line, String comment ) {
 
+   }
+
+   @Override
+   public WebhookEvent handleEvent( String payload ) {
+      return null;
    }
 
 }
