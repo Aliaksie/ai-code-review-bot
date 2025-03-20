@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+ai:
+  enabled: false
+  provider: local
+  model: o3-mini
+  role: user
+  apiKey: ''
+  endpoint: ''
+  temperature: ''
+  tokens: 0.7 # max tokens
+
+git:
+  provider: github  # Change to 'azure' for Azure DevOps
+  github:
+    token: YOUR_GITHUB_TOKEN
+    repo: your/repo
+
+  azure:
+    token: YOUR_AZURE_DEVOPS_TOKEN
+    org: your-org
+    project: your-project
+    repo: your-repo
+
+# todo ?all analyzer ...
+sonar:
+  host: http://localhost:9000
+  login: YOUR_SONARQUBE_TOKEN

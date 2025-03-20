@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <groupId>com.bot</groupId>
+   <artifactId>ai-code-review-bot</artifactId>
+   <version>0.1.0-SNAPSHOT</version>
+
+   <properties>
+      <maven.compiler.source>21</maven.compiler.source>
+      <maven.compiler.target>21</maven.compiler.target>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <spring-boot.version>3.4.3</spring-boot.version>
+      <sonar-maven-plugin.version>3.9.1.2184</sonar-maven-plugin.version>
+      <pmd-java.version>7.0.0</pmd-java.version>
+      <checkstyle.version>10.15.0</checkstyle.version>
+      <openai-gpt3-java.version>0.12.0</openai-gpt3-java.version>
+      <github-api.version>1.317</github-api.version>
+   </properties>
+
+   <dependencies>
+      <!-- Spring Boot Dependencies -->
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-web</artifactId>
+      </dependency>
+
+
+      <!-- Static Code Analysis -->
+      <dependency>
+         <groupId>org.sonarsource.scanner.maven</groupId>
+         <artifactId>sonar-maven-plugin</artifactId>
+         <version>${sonar-maven-plugin.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>net.sourceforge.pmd</groupId>
+         <artifactId>pmd-java</artifactId>
+         <version>${pmd-java.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.puppycrawl.tools</groupId>
+         <artifactId>checkstyle</artifactId>
+         <version>${checkstyle.version}</version>
+      </dependency>
+
+      <!-- OpenAI API for AI Code Review -->
+      <dependency>
+         <groupId>com.theokanning.openai-gpt3-java</groupId>
+         <artifactId>api</artifactId>
+         <version>${openai-gpt3-java.version}</version>
+      </dependency>
+
+      <!-- GitHub/GitLab API Integration -->
+      <dependency>
+         <groupId>org.kohsuke</groupId>
+         <artifactId>github-api</artifactId>
+         <version>${github-api.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.json</groupId>
+         <artifactId>json</artifactId>
+         <version>20250107</version>
+      </dependency>
+
+      <!-- Testing -->
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-test</artifactId>
+         <scope>test</scope>
+      </dependency>
+   </dependencies>
+
+   <dependencyManagement>
+      <dependencies>
+         <!-- POM section -->
+         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-dependencies</artifactId>
+            <version>${spring-boot.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
+   <build>
+      <plugins>
+         <!-- Spring Boot Plugin -->
+         <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${spring-boot.version}</version>
+         </plugin>
+
+         <!-- Java Compiler Plugin -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.1</version>
+            <configuration>
+               <source>${java.version}</source>
+               <target>${java.version}</target>
+               <parameters>true</parameters>
+               <encoding>${project.build.sourceEncoding}</encoding>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
+</project>
