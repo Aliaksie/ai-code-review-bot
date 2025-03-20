@@ -21,13 +21,19 @@ public class JavaHttpClient implements APIClient {
       this.httpClient = HttpClient.newBuilder().connectTimeout( Duration.ofSeconds( 10 ) ).build();
    }
 
-   public String sendPostRequest( String url, String apiKey, JSONObject body ) {
-      HttpRequest request = HttpRequest.newBuilder()
+   public String sendRequest( String url, String method, String apiKey, JSONObject body ) {
+      HttpRequest.Builder builder = HttpRequest.newBuilder()
             .uri( URI.create( url ) )
             .header( "Content-Type", "application/json" )
-            .header( "Authorization", "Bearer " + apiKey ) // todo:!!!
-            .POST( HttpRequest.BodyPublishers.ofString( body.toString(), StandardCharsets.UTF_8 ) ) // todo: !
-            .build();
+            .header( "Authorization", "Bearer " + apiKey );
+
+      if ( "POST".equalsIgnoreCase( method ) ) {
+         builder = builder.POST( HttpRequest.BodyPublishers.ofString( body.toString() ) );
+      } else {
+         builder = builder.GET();
+      }
+
+      HttpRequest request = builder.build();
 
       try {
          HttpResponse<String> response = httpClient.send( request, HttpResponse.BodyHandlers.ofString() );

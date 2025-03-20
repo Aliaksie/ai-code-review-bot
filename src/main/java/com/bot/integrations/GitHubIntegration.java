@@ -17,8 +17,8 @@ import com.bot.models.GitFile;
 public class GitHubIntegration implements GitIntegration {
    private final GitHub github;
 
-   public GitHubIntegration( String token ) throws IOException {
-      this.github = GitHub.connectUsingOAuth( token );
+   public GitHubIntegration( GitProperties props ) throws IOException {
+      this.github = GitHub.connectUsingOAuth( props.token() );
    }
 
    @Override
@@ -32,7 +32,6 @@ public class GitHubIntegration implements GitIntegration {
       return files;
    }
 
-   @Override
    public String getFileContent( final String repoId, final String filePath ) throws IOException {
       GHRepository repo = github.getRepository( repoId );
       GHContent fileContent = repo.getFileContent( filePath );

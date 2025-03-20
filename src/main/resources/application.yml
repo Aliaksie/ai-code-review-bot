@@ -13,9 +13,11 @@ ai:
 
 git:
   provider: github  # Change to 'azure' for Azure DevOps
-  github:
-    token: YOUR_GITHUB_TOKEN
-    repo: your/repo
+  token: YOUR_GITHUB_TOKEN
+  url: '' # base url to git
+  organization: '' # for
+  project: ''
+  version: '' # for Azure like 7.1-preview.1
 
   azure:
     token: YOUR_AZURE_DEVOPS_TOKEN

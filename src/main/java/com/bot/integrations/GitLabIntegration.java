@@ -5,13 +5,19 @@ import java.util.List;
 
 import com.bot.models.GitFile;
 
-public class GitLabIntegration  implements GitIntegration{
+public class GitLabIntegration implements GitIntegration {
+
+   private final GitProperties props;
+
+   public GitLabIntegration( GitProperties props ) {
+      this.props = props;
+   }
+
    @Override
    public List<GitFile> getChangedFiles( String repoId, String prId ) throws IOException {
       return List.of();
    }
 
-   @Override
    public String getFileContent( String repoId, String filePath ) throws IOException {
       return "";
    }
@@ -25,4 +31,5 @@ public class GitLabIntegration  implements GitIntegration{
    public void addInlineComment( String repoId, String prId, String filePath, int line, String comment ) throws IOException {
 
    }
+
 }

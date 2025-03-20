@@ -22,7 +22,7 @@ public class LocalAIClient implements AIClient {
             );
 
       // todo
-      String response = apiClient.sendPostRequest( props.endpoint() + "/v1/chat/completions", props.apiKey(), body );
+      String response = apiClient.sendRequest( props.endpoint() + "/v1/chat/completions", "POST", props.apiKey(), body );
       return extractMessage( response );
    }
 

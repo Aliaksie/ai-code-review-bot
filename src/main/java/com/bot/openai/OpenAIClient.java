@@ -25,7 +25,7 @@ public class OpenAIClient implements AIClient {
             );
 
       //todo
-      String response = apiClient.sendPostRequest( props.endpoint(), props.apiKey(), body );
+      String response = apiClient.sendRequest( props.endpoint(), "POST", props.apiKey(), body );
       return extractMessage( response );
    }
 

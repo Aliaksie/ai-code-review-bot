@@ -22,7 +22,7 @@ public class AzureOpenAIClient implements AIClient {
 
       // todo
       String url = "%s/openai/deployments/%s/chat/completions?api-version=2024-03-01".formatted( props.endpoint(), props.model() );
-      String response = apiClient.sendPostRequest( url, props.apiKey(), body );
+      String response = apiClient.sendRequest( url, "POST", props.apiKey(), body );
       return extractMessage( response );
    }
 
