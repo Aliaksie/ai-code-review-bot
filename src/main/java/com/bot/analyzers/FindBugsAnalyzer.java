@@ -1,13 +1,16 @@
 package com.bot.analyzers;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
-//Security & bug detection
+import com.bot.models.CodeRecommendation;
+
 @Component
 public class FindBugsAnalyzer implements StaticAnalyzer {
    @Override
-   public String analyze( String codeContent ) {
-      return "";
+   public List<CodeRecommendation> analyze( final String filePath, final String fileContent ) {
+      return List.of(); // todo:
    }
 
    @Override

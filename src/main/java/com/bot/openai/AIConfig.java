@@ -11,7 +11,7 @@ import com.bot.client.APIClient;
 @Configuration
 public class AIConfig {
 
-   // todo: !!!
+   // todo: // spring ai ? ? !!!
    @Bean
    public AIClient aiClient( AIProperties props, APIClient apiClient ) {
       if ( !props.enabled() ) {

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import com.bot.models.CodeRecommendation;
 import com.bot.models.GitFile;
 
 @Component
@@ -18,14 +19,14 @@ public class StaticAnalysisManager {
    }
 
    // todo! line / file level suggestion ?
-   public Map<String, String> analyzeCode( final String codeContent ) {
-      final Map<String, String> result = new HashMap<>();
+   public Map<String, List<CodeRecommendation>> analyzeCode( final String filePath, final String codeContent ) {
+      final Map<String, List<CodeRecommendation>> result = new HashMap<>();
 
       for ( final StaticAnalyzer analyzer : analyzers ) {
-         String analysisResult = analyzer.analyze( codeContent );
+         List<CodeRecommendation> analysisResult = analyzer.analyze( filePath, codeContent );
 
-         if ( !analysisResult.isBlank() ) {
-            result.put( analyzer.type(), analysisResult.trim() );
+         if ( !analysisResult.isEmpty() ) {
+            result.put( analyzer.type(), analysisResult );
          }
       }
 

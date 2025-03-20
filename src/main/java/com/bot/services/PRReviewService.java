@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.bot.analyzers.StaticAnalysisManager;
 import com.bot.integrations.GitIntegration;
+import com.bot.models.CodeRecommendation;
 import com.bot.models.GitFile;
 
 @Service
@@ -28,7 +29,7 @@ public class PRReviewService {
       final List<GitFile> changedFiles = gitIntegration.getChangedFiles( repoId, prId );
 
       for ( GitFile(String filename, String content) : changedFiles ) {
-         Map<String, String> fileResults = analysisManager.analyzeCode( content );
+         Map<String, List<CodeRecommendation>> fileResults = analysisManager.analyzeCode( filename, content );
          if ( fileResults.isEmpty() )
             continue;
 
@@ -36,14 +37,16 @@ public class PRReviewService {
          for ( int lineNum = 0; lineNum < lines.length; lineNum++ ) {
             String lineContent = lines[lineNum];
             // Run analysis for this line
-            Map<String, String> results = analysisManager.analyzeCode( lineContent );
+            Map<String, List<CodeRecommendation>> results = analysisManager.analyzeCode( filename, lineContent );
             for ( var result : results.entrySet() ) {
-               if ( !result.getValue().isBlank() ) {
-                  String aiSuggestion = aiService.generateCodeSuggestion( lineContent, content, result.getKey(), result.getValue() );
-                  String suggestion = StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), result.getValue() );
+               if ( !result.getValue().isEmpty() ) {
+                  String suggestion = result.getValue().stream()
+                        .filter( it -> it.line() == -1 )
+                        .map( it -> {
+                           String aiSuggestion = aiService.generateCodeSuggestion( content, content, result.getKey(), it.msg() );
+                           return StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), it.msg() );
+                        } ).collect( Collectors.joining( "\n" ) );
 
-                  // todo ?  compare line vs file suggestion
-                  String fileSuggestion = fileResults.get( result.getKey() );
                   gitIntegration.addInlineComment( repoId, prId, filename, lineNum + 1, suggestion );
                }
             }
@@ -51,9 +54,13 @@ public class PRReviewService {
 
          // todo: ?  make sure no line suggestion
          for ( var result : fileResults.entrySet() ) {
-            if ( !result.getValue().isBlank() ) {
-               String aiSuggestion = aiService.generateCodeSuggestion( content, content, result.getKey(), result.getValue() );
-               String suggestion = StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), result.getValue() );
+            if ( !result.getValue().isEmpty() ) {
+               String suggestion = result.getValue().stream()
+                     .filter( it -> it.line() != -1 )
+                     .map( it -> {
+                        String aiSuggestion = aiService.generateCodeSuggestion( content, content, result.getKey(), it.msg() );
+                        return StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), it.msg() );
+                     } ).collect( Collectors.joining( "\n" ) );
 
                gitIntegration.addInlineComment( repoId, prId, filename, 0, "### File Issues Detected: \n" + suggestion );
             }

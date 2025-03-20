@@ -2,10 +2,6 @@ package com.bot.controllers;
 
 import java.io.IOException;
 
-import org.kohsuke.github.GHEventPayload;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +12,7 @@ import com.bot.models.AIClientException;
 import com.bot.services.PRReviewService;
 
 @RestController
-@RequestMapping( "/github" )
+@RequestMapping( "/git" )
 public class GitWebhookController {
 
    final PRReviewService prReviewService;
