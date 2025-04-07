@@ -20,7 +20,7 @@ public class OpenAIClient implements AIClient {
             .put( "temperature", props.temperature() )
             .put( "max_tokens", props.tokens() )
             .put( "messages", new org.json.JSONArray()
-                  .put( new JSONObject().put( "role", "system" ).put( "content", "You are a helpful AI assistant." ) )
+                  .put( new JSONObject().put( "role", "system" ).put( "content", "You are a helpful AI code reviewer expert." ) )
                   .put( new JSONObject().put( "role", props.role() ).put( "content", prompt ) )
             );
 

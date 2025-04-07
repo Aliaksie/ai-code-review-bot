@@ -1,6 +1,7 @@
 package com.bot.models;
 
 public record CodeRecommendation(String filePath,
+                                 String language,
                                  int line,
                                  String msg,
                                  String content,

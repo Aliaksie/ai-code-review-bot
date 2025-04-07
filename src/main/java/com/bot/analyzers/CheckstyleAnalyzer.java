@@ -97,7 +97,8 @@ public class CheckstyleAnalyzer implements StaticAnalyzer {
          String message = event.getMessage();
 
          recommendations.add(
-               new CodeRecommendation( gitFile.filename(), line > 0 ? line : -1, message, gitFile.content(), CodeRecommendation.Type.CHECKSTYLE ) );
+               new CodeRecommendation( gitFile.filename(), gitFile.language(), line > 0 ? line : -1, message, gitFile.content(),
+                     CodeRecommendation.Type.CHECKSTYLE ) );
       }
 
       @Override

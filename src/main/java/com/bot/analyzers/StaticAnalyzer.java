@@ -12,7 +12,7 @@ public interface StaticAnalyzer {
    }
 
    default List<CodeRecommendation> analyzeMultipleFiles( List<GitFile> files ) {
-      return files.stream()
+      return files.stream().filter( it -> !"unknown".equals( it.language() ) )
             .flatMap( file -> analyze( file ).stream() )
             .toList();
    }

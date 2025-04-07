@@ -10,6 +10,7 @@ import com.bot.client.APIClient;
 import com.bot.models.AIException;
 import com.bot.models.GitFile;
 import com.bot.models.WebhookEvent;
+import com.bot.utility.LanguageDetector;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -60,7 +61,7 @@ public class AzureReposIntegration implements GitIntegration {
 
             // todo: Avoid duplicates
             if ( gitFiles.stream().noneMatch( f -> f.filename().equals( filePath ) ) ) {
-               gitFiles.add( new GitFile( repoId, filePath, fileContent ) );
+               gitFiles.add( new GitFile( repoId, filePath, fileContent, LanguageDetector.detect( filePath ) ) );
             }
          }
       }

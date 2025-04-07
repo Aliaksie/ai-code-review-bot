@@ -13,10 +13,10 @@ public class AIService {
       this.aiClient = aiClient;
    }
 
-   public String generateCodeSuggestion( String problematicCode, String context, String issueProvider, String issueDescription ) {
+   public String generateCodeSuggestion( String problematicCode, String context, String language, String issueProvider, String issueDescription ) {
       // todo: code lang .. .java and etc; use templates
       String prompt = """
-                You are an expert Java code reviewer. The following code has an issue:
+                You are an expert %s code reviewer. The following code has an issue:
             
                 Issue identified by: %s
             
@@ -33,7 +33,7 @@ public class AIService {
                 ```
             
                 Suggest an improved version of this code with a short explanation.
-            """.formatted( issueProvider, issueDescription, context, problematicCode );
+            """.formatted( language, issueProvider, issueDescription, context, problematicCode );
 
       String aiResponse = aiClient.generateResponse( prompt );
       return StringUtils.hasText( aiResponse ) ? formatAISuggestion( aiResponse ) : aiResponse;

@@ -16,6 +16,7 @@ import com.bot.models.AIException;
 import com.bot.models.CodeRecommendation;
 import com.bot.models.GitFile;
 import com.bot.models.SonarIssuesResponse;
+import com.bot.utility.LanguageDetector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
@@ -62,6 +63,7 @@ public class SonarQubeAnalyzer implements StaticAnalyzer {
          List<CodeRecommendation> recommendations = sonarIssues.issues().stream()
                .map( issue -> new CodeRecommendation(
                      issue.component(), // File name
+                     LanguageDetector.detect( issue.component() ),
                      issue.line() == null ? -1 : issue.line(),
                      issue.message(),
                      "",
@@ -83,6 +85,8 @@ public class SonarQubeAnalyzer implements StaticAnalyzer {
          Path tempDir = Files.createTempDirectory( "sonar-analysis" );
 
          for ( GitFile file : files ) {
+            if ( file.language().equals( "unknown" ) )
+               continue;
             Path filePath = tempDir.resolve( file.filename() );
             Files.writeString( filePath, file.content() );
          }

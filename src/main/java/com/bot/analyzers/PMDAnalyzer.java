@@ -57,7 +57,7 @@ public class PMDAnalyzer implements StaticAnalyzer {
             // ✅ Collect rule violations
             for ( RuleViolation violation : report.getViolations() ) {
                recommendations.add(
-                     new CodeRecommendation( file.filename(), violation.getBeginLine(), violation.getDescription(), file.content(),
+                     new CodeRecommendation( file.filename(), file.language(), violation.getBeginLine(), violation.getDescription(), file.content(),
                            CodeRecommendation.Type.PMD ) );
             }
          }

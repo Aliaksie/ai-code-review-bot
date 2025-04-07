@@ -51,7 +51,7 @@ public class PRReviewService {
                .forEach( it -> {
                   // todo extract line!
                   // todo: optimize for same recomendation and prior by analyze type
-                  String aiSuggestion = aiService.generateCodeSuggestion( fileContent, fileContent, result.getKey(), it.msg() );
+                  String aiSuggestion = aiService.generateCodeSuggestion( fileContent, fileContent, it.language(), result.getKey(), it.msg() );
                   String suggestion = StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), it.msg() );
 
                   gitIntegration.addInlineComment( event.repositoryId(), event.pullRequestId(), fileName, it.line(), suggestion );
@@ -60,7 +60,7 @@ public class PRReviewService {
          String suggestion = result.getValue().stream()
                .filter( it -> it.line() == -1 )
                .map( it -> {
-                  String aiSuggestion = aiService.generateCodeSuggestion( fileContent, fileContent, result.getKey(), it.msg() );
+                  String aiSuggestion = aiService.generateCodeSuggestion( fileContent, fileContent, it.language(), result.getKey(), it.msg() );
                   return StringUtils.hasText( aiSuggestion ) ? aiSuggestion : "%s : %s".formatted( result.getKey(), it.msg() );
                } ).collect( Collectors.joining( "\n" ) );
 

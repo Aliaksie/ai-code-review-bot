@@ -14,6 +14,7 @@ import org.kohsuke.github.GitHub;
 import com.bot.models.AIException;
 import com.bot.models.GitFile;
 import com.bot.models.WebhookEvent;
+import com.bot.utility.LanguageDetector;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,7 +35,7 @@ public class GitHubIntegration implements GitIntegration {
          GHPullRequest pr = github.getRepository( repoId ).getPullRequest( prId );
 
          for ( final GHPullRequestFileDetail file : pr.listFiles() ) {
-            files.add( new GitFile( repoId, file.getFilename(), getFileContent( repoId, file.getFilename() ) ) );
+            files.add( new GitFile( repoId, file.getFilename(), getFileContent( repoId, file.getFilename() ), LanguageDetector.detect( file.getFilename() ) ) );
          }
          return files;
       } catch ( IOException e ) {
